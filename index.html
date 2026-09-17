@@ -3,705 +3,243 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Construtor de Casas</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: "Comic Sans MS", "Comic Sans", cursive, sans-serif;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      background: #87ceeb;
-      overflow: hidden;
-    }
-
-    .ground {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 25vh;
-      background: #4caf50;
-    }
-
-    .control-panel {
-      position: fixed;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 25vw;
-      z-index: 10;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: flex-start;
-      gap: 12px;
-      padding: 20px;
-      background: rgba(0, 0, 0, 0.35);
-      backdrop-filter: blur(2px);
-      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
-    }
-
-    button {
-      font-family: inherit;
-      border: none;
-      padding: 8px 16px;
-      font-size: 14px;
-      font-weight: bold;
-      border-radius: 50px;
-      cursor: pointer;
-      color: #fff;
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
-      transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
-    }
-
-    button:hover {
-      transform: translateY(-3px);
-      filter: brightness(1.1);
-    }
-
-    button:active {
-      transform: translateY(0) scale(0.96);
-    }
-
-    #btn-build {
-      background: linear-gradient(135deg, #4caf50, #388e3c);
-    }
-
-    #btn-explode {
-      background: linear-gradient(135deg, #f44336, #c62828);
-    }
-
-    #btn-melt {
-      background: linear-gradient(135deg, #ff9800, #f57c00);
-    }
-
-    #btn-abduct {
-      background: linear-gradient(135deg, #7c4dff, #512da8);
-    }
-
-    #btn-return {
-      background: linear-gradient(135deg, #26c6da, #00838f);
-    }
-
-    .scene {
-      position: fixed;
-      bottom: 25vh;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 300px;
-      height: 320px;
-      z-index: 5;
-    }
-
-    .house {
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      margin-left: -90px;
-      width: 180px;
-      height: 150px;
-      background: #f4a460;
-      border: 3px solid #5d4037;
-      visibility: hidden;
-      opacity: 0;
-    }
-
-    .house.built {
-      visibility: visible;
-      opacity: 1;
-    }
-
-    .house.popping {
-      animation: pop 0.4s ease-out;
-    }
-
-    .house.returning {
-      visibility: visible;
-      animation: return-down 1.6s ease-out forwards;
-    }
-
-    @keyframes return-down {
-      from {
-        transform: translateY(-45vh) scale(0.05);
-        opacity: 0;
-      }
-      to {
-        transform: translateY(0) scale(1);
-        opacity: 1;
-      }
-    }
-
-    .house .roof {
-      position: absolute;
-      bottom: 100%;
-      left: 50%;
-      margin-left: -105px;
-      width: 0;
-      height: 0;
-      border-left: 105px solid transparent;
-      border-right: 105px solid transparent;
-      border-bottom: 90px solid #c62828;
-    }
-
-    .house .door {
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      margin-left: -20px;
-      width: 40px;
-      height: 60px;
-      background: #5d4037;
-      border-radius: 20px 20px 0 0;
-      z-index: 1;
-    }
-
-    .house .window {
-      position: absolute;
-      top: 20px;
-      width: 34px;
-      height: 34px;
-      background: #bbdefb;
-      border: 3px solid #5d4037;
-      border-radius: 4px;
-    }
-
-    .house .window.left {
-      left: 16px;
-    }
-
-    .house .window.right {
-      right: 16px;
-    }
-
-    @keyframes pop {
-      0% {
-        transform: scale(0);
-      }
-      70% {
-        transform: scale(1.1);
-      }
-      100% {
-        transform: scale(1);
-      }
-    }
-
-    .house.melting {
-      animation: melt 1.6s ease-in forwards;
-    }
-
-    @keyframes melt {
-      0% {
-        transform: scale(1);
-        opacity: 1;
-      }
-      25% {
-        transform: scaleY(1.1);
-        border-radius: 12px 12px 0 0;
-      }
-      60% {
-        transform: scaleY(0.55) translateY(30px);
-        border-radius: 40% 40% 60% 60%;
-        filter: blur(1px);
-      }
-      100% {
-        transform: scaleY(0.05) translateY(70px);
-        border-radius: 50%;
-        opacity: 0;
-      }
-    }
-
-    .drip {
-      position: fixed;
-      width: 10px;
-      height: 30px;
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 20;
-      background: #f4a460;
-      animation: drip 1.2s ease-in forwards;
-    }
-
-    @keyframes drip {
-      from {
-        transform: translateY(0) scale(1);
-        opacity: 1;
-      }
-      to {
-        transform: translateY(120px) scale(0.6);
-        opacity: 0;
-      }
-    }
-
-    .particle {
-      position: fixed;
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 20;
-      animation: fly 0.9s ease-out forwards;
-    }
-
-    @keyframes fly {
-      0% {
-        transform: translate(0, 0) scale(1);
-        opacity: 1;
-      }
-      100% {
-        transform: translate(var(--dx), var(--dy)) scale(0.2);
-        opacity: 0;
-      }
-    }
-
-    .boom {
-      position: absolute;
-      top: 40%;
-      left: 50%;
-      margin-left: -45px;
-      font-size: 90px;
-      opacity: 0;
-      pointer-events: none;
-      z-index: 15;
-    }
-
-    #ufo {
-      position: fixed;
-      top: 3%;
-      left: -320px;
-      width: 200px;
-      height: 70px;
-      z-index: 18;
-      visibility: hidden;
-      pointer-events: none;
-    }
-
-    #ufo .ufo-body {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 200px;
-      height: 70px;
-      animation: bob 2.2s ease-in-out infinite alternate;
-    }
-
-    #ufo.enter {
-      visibility: visible;
-      animation: ufo-in 1.6s ease-in forwards;
-    }
-
-    #ufo.exit {
-      visibility: visible;
-      animation: ufo-out 1.5s ease-in forwards;
-    }
-
-    @keyframes ufo-in {
-      from {
-        left: -320px;
-      }
-      to {
-        left: calc(50% - 100px);
-      }
-    }
-
-    @keyframes ufo-out {
-      from {
-        left: calc(50% - 100px);
-      }
-      to {
-        left: 100vw;
-      }
-    }
-
-    .ufo-dome {
-      position: absolute;
-      top: -34px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 84px;
-      height: 56px;
-      background: radial-gradient(circle at 35% 22%, #e8fbff, #4fc3f7 55%, #0277bd);
-      border-radius: 50% 50% 48% 48%;
-      box-shadow: inset 0 -8px 10px rgba(0, 0, 0, 0.3), 0 0 18px rgba(79, 195, 247, 0.6);
-    }
-
-    .ufo-dome::after {
-      content: '';
-      position: absolute;
-      top: 8px;
-      left: 20px;
-      width: 12px;
-      height: 8px;
-      background: rgba(255, 255, 255, 0.8);
-      border-radius: 50%;
-      transform: rotate(-25deg);
-    }
-
-    .ufo-saucer {
-      position: absolute;
-      top: 20px;
-      left: 0;
-      width: 200px;
-      height: 52px;
-      background: radial-gradient(ellipse at 50% 0%, #cfd8dc, #90a4ae 55%, #455a64);
-      border-radius: 50%;
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.45);
-    }
-
-    .ufo-saucer::after {
-      content: '';
-      position: absolute;
-      left: 17%;
-      right: 17%;
-      bottom: -20px;
-      height: 30px;
-      background: radial-gradient(ellipse at 50% 0%, #90a4ae, #37474f);
-      border-radius: 50%;
-      box-shadow: inherit;
-    }
-
-    .ufo-light {
-      position: absolute;
-      bottom: -4px;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      animation: blink 0.5s ease-in-out infinite alternate;
-    }
-
-    .ufo-light.l1 { left: 20px; background: #ff1744; }
-    .ufo-light.l2 { left: 55px; background: #00e676; animation-delay: 0.15s; }
-    .ufo-light.l3 { left: 95px; background: #2979ff; animation-delay: 0.3s; }
-    .ufo-light.l4 { left: 130px; background: #ffee58; animation-delay: 0.45s; }
-    .ufo-light.l5 { left: 165px; background: #ff9100; animation-delay: 0.6s; }
-
-    @keyframes blink {
-      from {
-        opacity: 0.2;
-        box-shadow: none;
-      }
-      to {
-        opacity: 1;
-        box-shadow: 0 0 10px 3px currentColor;
-      }
-    }
-
-    @keyframes bob {
-      from {
-        transform: translateY(0);
-      }
-      to {
-        transform: translateY(14px);
-      }
-    }
-
-    #beam {
-      position: fixed;
-      top: 13%;
-      left: calc(50% - 70px);
-      width: 140px;
-      height: 45vh;
-      clip-path: polygon(38% 0, 62% 0, 100% 100%, 0 100%);
-      background: linear-gradient(to bottom, rgba(139, 255, 139, 0.9), rgba(139, 255, 139, 0));
-      z-index: 17;
-      visibility: hidden;
-      pointer-events: none;
-    }
-
-    #beam.show {
-      visibility: visible;
-      animation: beam-glow 0.8s ease-in-out infinite alternate;
-    }
-
-    @keyframes beam-glow {
-      from {
-        opacity: 0.5;
-      }
-      to {
-        opacity: 1;
-      }
-    }
-
-    .house.abducted {
-      animation: abduct 1.5s ease-in forwards;
-    }
-
-    @keyframes abduct {
-      to {
-        transform: translateY(-45vh) scale(0.1);
-        opacity: 0;
-      }
-    }
-
-    .boom.show {
-      animation: boom 0.8s ease-out forwards;
-    }
-
-    @keyframes boom {
-      0% {
-        opacity: 1;
-        transform: scale(0.3);
-      }
-      100% {
-        opacity: 0;
-        transform: scale(2.5);
-      }
-    }
-
-    .message {
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.7);
-      color: #fff;
-      padding: 10px 24px;
-      border-radius: 50px;
-      font-size: 18px;
-      z-index: 30;
-      visibility: hidden;
-      opacity: 0;
-      transition: opacity 0.2s, visibility 0.2s;
-    }
-
-    .message.show {
-      visibility: visible;
-      opacity: 1;
-    }
-  </style>
+  <title>Davi Afonso da Silva | Desenvolvedor</title>
+  <meta name="description" content="Portfólio de Davi Afonso da Silva — desenvolvedor front-end, back-end e de jogos em formação. Dê o primeiro passo para uma oportunidade de estágio.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <div class="ground"></div>
 
-  <div class="control-panel">
-    <button id="btn-build" type="button" onclick="buildHouse()">Construir casa</button>
-    <button id="btn-explode" type="button" onclick="explodeHouse()">Explodir casa</button>
-    <button id="btn-melt" type="button" onclick="meltHouse()">Derreter casa</button>
-    <button id="btn-abduct" type="button" onclick="abductHouse()">Abduzir casa</button>
-    <button id="btn-return" type="button" onclick="returnHouse()">Devolver casa</button>
-  </div>
+  <a class="skip-link" href="#inicio">Pular para o conteúdo</a>
 
-  <div class="scene">
-    <div id="ufo">
-      <div class="ufo-body">
-        <div class="ufo-dome"></div>
-        <div class="ufo-saucer"></div>
-        <div class="ufo-light l1"></div>
-        <div class="ufo-light l2"></div>
-        <div class="ufo-light l3"></div>
-        <div class="ufo-light l4"></div>
-        <div class="ufo-light l5"></div>
+  <header class="header" id="topo">
+    <div class="container header__inner">
+      <a href="#inicio" class="header__logo">&lt;Davi /&gt;</a>
+
+      <nav class="nav" aria-label="Navegação principal">
+        <ul class="nav__list">
+          <li><a href="#inicio" class="nav__link">Início</a></li>
+          <li><a href="#sobre" class="nav__link">Sobre</a></li>
+          <li><a href="#habilidades" class="nav__link">Habilidades</a></li>
+          <li><a href="#projetos" class="nav__link">Projetos</a></li>
+          <li><a href="#contato" class="nav__link nav__link--cta">Contato</a></li>
+        </ul>
+      </nav>
+
+      <button class="nav-toggle" aria-label="Abrir menu" aria-expanded="false" aria-controls="menu-mobile">
+        <span></span><span></span><span></span>
+      </button>
+
+      <ul class="nav-mobile" id="menu-mobile">
+        <li><a href="#inicio" class="nav-mobile__link">Início</a></li>
+        <li><a href="#sobre" class="nav-mobile__link">Sobre</a></li>
+        <li><a href="#habilidades" class="nav-mobile__link">Habilidades</a></li>
+        <li><a href="#projetos" class="nav-mobile__link">Projetos</a></li>
+        <li><a href="#contato" class="nav-mobile__link">Contato</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main>
+    <!-- ============ HERO ============ -->
+    <section class="hero" id="inicio">
+      <div class="container hero__inner">
+        <p class="hero__eyebrow">Olá, eu sou</p>
+        <h1 class="hero__title">Davi Afonso da Silva</h1>
+        <h2 class="hero__subtitle">Estudante de Front-end, Back-end e Desenvolvimento de Jogos</h2>
+        <p class="hero__text">
+          A curiosidade transforma. Eu transformo ideias abstratas em código que outras
+          pessoas podem usar — e jogos que outras pessoas podem jogar.
+        </p>
+        <div class="hero__actions">
+          <a href="#projetos" class="btn btn--primary">Ver Projetos</a>
+          <a href="#contato" class="btn btn--ghost">Entrar em Contato</a>
+        </div>
+        <ul class="hero__meta">
+          <li>HTML</li>
+          <li>CSS</li>
+          <li>JavaScript</li>
+          <li>React</li>
+          <li>Python</li>
+        </ul>
       </div>
+    </section>
+
+    <!-- ============ SOBRE ============ -->
+    <section class="section" id="sobre">
+      <div class="container">
+        <header class="section__head">
+          <h2 class="section__title"><span class="section__num">01.</span> Sobre Mim</h2>
+          <p class="section__lead">Quem está por trás das telas</p>
+        </header>
+        <div class="sobre">
+          <div class="sobre__texto">
+            <p>
+              Sou um desenvolvedor movido pela curiosidade de entender como as coisas funcionam
+              por trás das telas. Minha jornada na programação começou pela paixão em transformar
+              ideias abstratas em código funcional e interativo.
+            </p>
+            <p>
+              Tenho dedicado meu tempo a dominar tecnologias web como HTML, CSS e JavaScript,
+              sempre buscando aplicar boas práticas de código, lógica sólida e interfaces amigáveis.
+            </p>
+            <p>
+              Sou movido por desafios e estou em constante aprendizado, buscando minha primeira
+              oportunidade profissional para somar em uma equipe, evoluir minhas habilidades e
+              impactar usuários de forma positiva.
+            </p>
+          </div>
+          <aside class="sobre__card">
+            <h3 class="sobre__card-title">Ficha rápida</h3>
+            <ul class="sobre__lista">
+              <li><span>Nome</span> Davi Afonso da Silva</li>
+              <li><span>Nível</span> Estudante</li>
+              <li><span>Objetivo</span> Primeiro estágio</li>
+              <li><span>Áreas</span> Front-end · Back-end · Jogos</li>
+              <li><span>Local</span> Remoto / Presencial</li>
+            </ul>
+            <p class="sobre__focus">Hoje foco em: <strong>JavaScript</strong> e <strong>React</strong></p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ HABILIDADES ============ -->
+    <section class="section section--alt" id="habilidades">
+      <div class="container">
+        <header class="section__head">
+          <h2 class="section__title"><span class="section__num">02.</span> Habilidades</h2>
+          <p class="section__lead">As stacks que estudo e aplico</p>
+        </header>
+
+        <div class="habilidades">
+          <article class="card">
+            <span class="card__icon" aria-hidden="true">&lt;/&gt;</span>
+            <h3 class="card__title">HTML5 &amp; CSS3</h3>
+            <p class="card__text">Semântica web, acessibilidade e estilização moderna — layouts que fazem sentido tanto para navegadores quanto para leitores de tela.</p>
+          </article>
+
+          <article class="card">
+            <span class="card__icon" aria-hidden="true">{ }</span>
+            <h3 class="card__title">JavaScript (ES6+)</h3>
+            <p class="card__text">Manipulação de DOM, funções assíncronas e lógica de programação — do clique no botão à requisição para uma API.</p>
+          </article>
+
+          <article class="card">
+            <span class="card__icon" aria-hidden="true">▦</span>
+            <h3 class="card__title">Layouts Responsivos</h3>
+            <p class="card__text">Design adaptável para celular, tablet e computador, com foco em usabilidade e performance.</p>
+          </article>
+
+          <article class="card">
+            <span class="card__icon" aria-hidden="true">⚛</span>
+            <h3 class="card__title">React <span class="card__tag">em estudo</span></h3>
+            <p class="card__text">Componentização e interfaces reactivas, construindo aplicações web escaláveis e reutilizáveis.</p>
+          </article>
+
+          <article class="card">
+            <span class="card__icon" aria-hidden="true">&gt;_</span>
+            <h3 class="card__title">Python <span class="card__tag">em estudo</span></h3>
+            <p class="card__text">Lógica de programação, automação e base para desenvolvimento back-end com foco em código legível.</p>
+          </article>
+
+          <article class="card">
+            <span class="card__icon" aria-hidden="true">🎮</span>
+            <h3 class="card__title">Desenvolvimento de Jogos</h3>
+            <p class="card__text">Criar experiências interativas com mecânicas de construção e destruição, juntando lógica, física e diversão.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PROJETOS ============ -->
+    <section class="section" id="projetos">
+      <div class="container">
+        <header class="section__head">
+          <h2 class="section__title"><span class="section__num">03.</span> Projetos em Destaque</h2>
+          <p class="section__lead">Do problema à solução</p>
+        </header>
+
+        <article class="projeto">
+          <figure class="projeto__demo" aria-hidden="true">🏗️</figure>
+          <div class="projeto__body">
+            <p class="projeto__label">Projeto principal</p>
+            <h3 class="projeto__title">Destruidor de Casas</h3>
+
+            <div class="projeto__bloco">
+              <h4>Problema</h4>
+              <p>Quem nunca quis desmontar algo só para entender como funciona? A proposta era criar um ambiente divertido para explorar as ideias de <em>construção</em> e <em>destruição</em> de estruturas — juntando lógica, física simples e interação imediata.</p>
+            </div>
+
+            <div class="projeto__bloco">
+              <h4>Solução</h4>
+              <p>Um jogo simples e interativo em que o jogador constrói e destrói casas, experimentando as consequências de cada ação em tempo real. Cada interação ensina algo novo sobre estados, eventos e resposta visual ao usuário.</p>
+            </div>
+
+            <div class="projeto__bloco">
+              <h4>Tecnologias</h4>
+              <ul class="projeto__tags">
+                <li>HTML5</li>
+                <li>CSS3</li>
+                <li>JavaScript</li>
+              </ul>
+            </div>
+
+            <div class="projeto__links">
+              <a href="portifolio/index.html" class="btn btn--primary btn--sm">Ver Demo</a>
+              <a href="https://github.com/destruidordecasas" class="btn btn--ghost btn--sm" target="_blank" rel="noopener">Ver no GitHub</a>
+            </div>
+          </div>
+        </article>
+
+        <div class="projeto__vazio">
+          <p>Novos projetos a caminho — cada desafio novo vira um card aqui.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ CONTATO / RODAPÉ ============ -->
+  <section class="contato" id="contato">
+    <div class="container">
+      <header class="section__head">
+        <h2 class="section__title section__title--center"><span class="section__num">04.</span> Vamos conversar?</h2>
+        <p class="section__lead section__lead--center">Estou em busca da minha primeira oportunidade de estágio</p>
+      </header>
+
+      <div class="contato__cards">
+        <a href="https://github.com/destruidordecasas" class="contato__card" target="_blank" rel="noopener">
+          <span class="contato__icon">GitHub</span>
+          <span class="contato__rotulo">Conheça meu código</span>
+          <span class="contato__valor">@destruidordecasas</span>
+        </a>
+
+        <a href="https://www.linkedin.com/in/" class="contato__card" target="_blank" rel="noopener">
+          <span class="contato__icon">in</span>
+          <span class="contato__rotulo">Conecte-se comigo</span>
+          <span class="contato__valor">LinkedIn: Davi Afonso da Silva</span>
+        </a>
+
+        <a href="mailto:porque798211" class="contato__card">
+          <span class="contato__icon">@</span>
+          <span class="contato__rotulo">Fale direto comigo</span>
+          <span class="contato__valor">porque798211</span>
+        </a>
+      </div>
+
+      <p class="contato__resposta">Respondo rápido — geralmente em até 24h.</p>
     </div>
-    <div id="beam" class="beam"></div>
-    <div id="boom" class="boom">💥</div>
-    <div id="house" class="house">
-      <div class="roof"></div>
-      <div class="door"></div>
-      <div class="window left"></div>
-      <div class="window right"></div>
+  </section>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <p>© <span id="ano"></span> Davi Afonso da Silva — Feito com curiosidade, HTML, CSS e JavaScript.</p>
+      <a href="#topo" class="footer__topo">Voltar ao topo ↑</a>
     </div>
-  </div>
+  </footer>
 
-  <div id="message" class="message"></div>
-
-  <script>
-    var house = document.getElementById('house');
-    var boom = document.getElementById('boom');
-    var message = document.getElementById('message');
-    var ufo = document.getElementById('ufo');
-    var beam = document.getElementById('beam');
-    var houseBuilt = false;
-    var houseAbducted = false;
-    var msgTimer = null;
-    var ufoBusy = false;
-
-    function showMessage(text) {
-      message.textContent = text;
-      message.classList.add('show');
-      if (msgTimer) clearTimeout(msgTimer);
-      msgTimer = setTimeout(function () {
-        message.classList.remove('show');
-      }, 1500);
-    }
-
-    function spawnParticles() {
-      var colors = ['#f44336', '#ff9800', '#ffeb3b', '#8d6e63', '#ffffff'];
-      var rect = house.getBoundingClientRect();
-      var hw = rect.left + rect.width / 2;
-      var hy = rect.top + rect.height / 2;
-      for (var i = 0; i < 30; i++) {
-        var p = document.createElement('div');
-        p.className = 'particle';
-        p.style.background = colors[i % colors.length];
-        p.style.left = hw + 'px';
-        p.style.top = hy + 'px';
-        p.style.setProperty('--dx', (Math.random() - 0.5) * 500 + 'px');
-        p.style.setProperty('--dy', (-Math.random() * 500 + 100) + 'px');
-        document.body.appendChild(p);
-        (function (el) {
-          setTimeout(function () { el.remove(); }, 900);
-        })(p);
-      }
-    }
-
-    function buildHouse() {
-      if (houseBuilt) {
-        showMessage('A casa já está construída!');
-        return;
-      }
-      houseBuilt = true;
-      houseAbducted = false;
-      house.style.visibility = '';
-      boom.classList.remove('show');
-      house.classList.remove('built');
-      void house.offsetWidth;
-      house.classList.add('built');
-      house.classList.add('popping');
-      setTimeout(function () {
-        house.classList.remove('popping');
-      }, 500);
-      showMessage('🏠 Casa construída');
-    }
-
-    function explodeHouse() {
-      if (!houseBuilt) {
-        showMessage('Não há casa para explodir!');
-        return;
-      }
-      spawnParticles();
-      boom.classList.remove('show');
-      void boom.offsetWidth;
-      boom.classList.add('show');
-      house.classList.remove('built');
-      houseBuilt = false;
-      showMessage('💥 BUM!');
-    }
-
-    function spawnDrips() {
-      var rect = house.getBoundingClientRect();
-      var hw = rect.left + rect.width / 2;
-      var hy = rect.top + rect.height / 2;
-      for (var i = 0; i < 8; i++) {
-        var d = document.createElement('div');
-        d.className = 'drip';
-        d.style.left = hw + (i - 3) * 22 + 'px';
-        d.style.top = hy + 60 + (i % 3) * 15 + 'px';
-        d.style.animationDelay = i * 0.15 + 's';
-        document.body.appendChild(d);
-        (function (el) {
-          setTimeout(function () { el.remove(); }, 2600);
-        })(d);
-      }
-    }
-
-    function meltHouse() {
-      if (!houseBuilt) {
-        showMessage('Não há casa para derreter!');
-        return;
-      }
-      spawnDrips();
-      house.classList.remove('built');
-      house.classList.add('melting');
-      houseBuilt = false;
-      showMessage('🥵 A casa derreteu');
-      setTimeout(function () {
-        house.classList.remove('melting');
-      }, 1700);
-    }
-
-    function flyEnter(cb) {
-      if (ufoBusy) return;
-      ufoBusy = true;
-      ufo.classList.remove('exit');
-      ufo.style.left = '';
-      ufo.style.top = '';
-      ufo.style.visibility = '';
-      ufo.classList.add('enter');
-      setTimeout(function () {
-        if (cb) cb();
-      }, 1600);
-    }
-
-    function flyExit(cb) {
-      ufo.classList.remove('enter');
-      void ufo.offsetWidth;
-      ufo.classList.add('exit');
-      setTimeout(function () {
-        ufo.classList.remove('exit');
-        ufo.style.left = '-320px';
-        ufo.style.top = '';
-        ufo.style.visibility = 'hidden';
-        ufoBusy = false;
-        if (cb) cb();
-      }, 1500);
-    }
-
-    function abductHouse() {
-      if (!houseBuilt) {
-        showMessage('Não há casa para abduzir!');
-        return;
-      }
-      if (ufoBusy) {
-        showMessage('O OVNI está ocupado!');
-        return;
-      }
-      houseBuilt = false;
-      houseAbducted = true;
-
-      flyEnter(function () {
-        beam.classList.add('show');
-        house.classList.remove('built');
-        house.classList.add('abducted');
-      });
-
-      setTimeout(function () {
-        house.classList.remove('abducted');
-        house.style.visibility = 'hidden';
-        beam.classList.remove('show');
-        flyExit(function () {
-          house.style.visibility = '';
-        });
-      }, 3400);
-
-      showMessage('🛸 Casa abduzida!');
-    }
-
-    function returnHouse() {
-      if (!houseAbducted) {
-        showMessage('A casa não está abduzida!');
-        return;
-      }
-      if (ufoBusy) {
-        showMessage('O OVNI está ocupado!');
-        return;
-      }
-      houseAbducted = false;
-
-      flyEnter(function () {
-        beam.classList.add('show');
-        house.classList.remove('built');
-        house.style.visibility = '';
-        void house.offsetWidth;
-        house.classList.add('built');
-        house.classList.add('returning');
-      });
-
-      setTimeout(function () {
-        house.classList.remove('returning');
-        houseBuilt = true;
-        beam.classList.remove('show');
-        showMessage('🏠 Casa devolvida!');
-        flyExit();
-      }, 3400);
-    }
-  </script>
+  <script src="js/script.js"></script>
 </body>
 </html>

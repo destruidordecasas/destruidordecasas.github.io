@@ -1,0 +1,1557 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Construtor de Casas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --pixel: "Press Start 2P", "Courier New", monospace;
+      --ink: #000;
+      --out: 3px solid #000;
+      --shadow: 4px 4px 0 rgba(0, 0, 0, 0.4);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      image-rendering: pixelated;
+    }
+
+    body {
+      font-family: var(--pixel);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: #6db3f2;
+      overflow: hidden;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 998;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.12) 0px,
+        rgba(0, 0, 0, 0.12) 1px,
+        transparent 1px,
+        transparent 4px
+      );
+    }
+
+    .ground {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 24vh;
+      background-color: #57a639;
+      background-image:
+        linear-gradient(45deg, #4e9833 25%, transparent 25%, transparent 75%, #4e9833 75%),
+        linear-gradient(45deg, #4e9833 25%, transparent 25%, transparent 75%, #4e9833 75%);
+      background-size: 32px 32px;
+      background-position: 0 0, 16px 16px;
+      border-top: 4px solid #2c4b1d;
+      box-shadow: inset 0 18px 0 rgba(0, 0, 0, 0.15);
+    }
+
+    .action-panel {
+      position: fixed;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+      padding: 18px;
+      background: #fff3c4;
+      border: var(--out);
+      box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.35);
+    }
+
+    .action-panel::before {
+      content: '* AÇÕES *';
+      color: #a15c1d;
+      font-size: 11px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    .ac-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px;
+      background: #ffe8a0;
+      border: 3px solid #000;
+      box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.35);
+    }
+
+    .ac-group__titulo {
+      font-family: var(--pixel);
+      font-size: 10px;
+      letter-spacing: 1px;
+      text-align: center;
+      color: #a15c1d;
+    }
+
+    .ac-group button {
+      width: 100%;
+    }
+
+    button {
+      font-family: var(--pixel);
+      border: var(--out);
+      padding: 12px 14px;
+      font-size: 10px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      color: #fff;
+      border-radius: 0;
+      box-shadow: var(--shadow);
+      transition: transform 0.08s, box-shadow 0.08s, filter 0.08s;
+    }
+
+    button:hover {
+      transform: translate(-2px, -2px);
+      filter: brightness(1.1);
+      box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.4);
+    }
+
+    button:active {
+      transform: translate(3px, 3px);
+      box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.4);
+    }
+
+    #btn-build {
+      background: #4caf50;
+    }
+
+    #btn-explode {
+      background: #e53935;
+      padding: 10px 12px;
+      font-size: 9px;
+    }
+
+    #btn-melt {
+      background: #ff8f00;
+      padding: 10px 12px;
+      font-size: 9px;
+    }
+
+    #btn-abduct {
+      background: #7e57c2;
+      padding: 10px 12px;
+      font-size: 9px;
+    }
+
+    #btn-return {
+      background: #26a69a;
+      padding: 10px 12px;
+      font-size: 9px;
+    }
+
+    .scene {
+      position: fixed;
+      bottom: 24vh;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 300px;
+      height: 320px;
+      z-index: 5;
+    }
+
+    .house {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      margin-left: -90px;
+      width: 180px;
+      height: 150px;
+      background: #e8a05c;
+      border: 4px solid #000;
+      box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.3);
+      visibility: hidden;
+      opacity: 0;
+    }
+
+    .house.built {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .house.popping {
+      animation: pop 0.3s ease-out;
+    }
+
+    .house.returning {
+      visibility: visible;
+      animation: return-down 1.4s ease-out forwards;
+    }
+
+    @keyframes return-down {
+      from {
+        transform: translateY(-10vh) scale(0.02);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+    }
+
+    .house .roof {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      margin-left: -105px;
+      width: 0;
+      height: 0;
+      border-left: 105px solid transparent;
+      border-right: 105px solid transparent;
+      border-bottom: 90px solid #000;
+    }
+
+    .house .roof::after {
+      content: '';
+      position: absolute;
+      top: 6px;
+      left: -92px;
+      width: 0;
+      height: 0;
+      border-left: 92px solid transparent;
+      border-right: 92px solid transparent;
+      border-bottom: 78px solid #c04020;
+    }
+
+    .house .door {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      margin-left: -20px;
+      width: 40px;
+      height: 60px;
+      background: #6b3f22;
+      border: 3px solid #000;
+      border-bottom: none;
+      border-radius: 0;
+      z-index: 1;
+    }
+
+    .house .window {
+      position: absolute;
+      top: 20px;
+      width: 34px;
+      height: 34px;
+      background: #ffe066;
+      border: 3px solid #000;
+      border-radius: 0;
+    }
+
+    .house .window::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 3px;
+      height: 100%;
+      margin-left: -1px;
+      background: #000;
+    }
+
+    .house .window.left {
+      left: 18px;
+    }
+
+    .house .window.right {
+      right: 18px;
+    }
+
+    @keyframes pop {
+      0% {
+        transform: scale(0);
+      }
+      70% {
+        transform: scale(1.1);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    .house.melting {
+      visibility: visible;
+      animation: melt 2.2s ease-out forwards;
+    }
+
+    @keyframes melt {
+      0% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+        filter: none;
+      }
+      20% {
+        transform: scaleY(0.88) scaleX(1.06) rotate(-1deg) translateY(10px);
+        filter: brightness(1.1);
+      }
+      40% {
+        transform: scaleY(0.7) scaleX(1.12) rotate(1deg) translateY(22px);
+      }
+      60% {
+        transform: scaleY(0.48) scaleX(1.18) rotate(0deg) translateY(36px);
+        filter: brightness(1.15);
+      }
+      80% {
+        transform: scaleY(0.25) scaleX(1.24) rotate(-1deg) translateY(52px);
+      }
+      100% {
+        transform: scaleY(0.06) scaleX(1.28) rotate(1deg) translateY(66px);
+        opacity: 0;
+        filter: brightness(0.4);
+      }
+    }
+
+    .drip {
+      position: fixed;
+      width: 12px;
+      height: 26px;
+      border-radius: 0;
+      pointer-events: none;
+      z-index: 20;
+      background: #ff5722;
+      border: 2px solid #000;
+      animation: drip 1.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    }
+
+    @keyframes drip {
+      0% {
+        transform: translateY(0) scale(1) rotate(0deg);
+        opacity: 1;
+      }
+      30% {
+        transform: translateY(26px) scale(1) rotate(0deg);
+      }
+      60% {
+        transform: translateY(60px) scale(1) rotate(0deg);
+        opacity: 0.8;
+      }
+      100% {
+        transform: translateY(110px) scale(1) rotate(0deg);
+        opacity: 0;
+      }
+    }
+
+    .drip-smoke {
+      position: fixed;
+      width: 14px;
+      height: 14px;
+      border-radius: 0;
+      pointer-events: none;
+      z-index: 19;
+      background: #d7ccc8;
+      border: 2px solid #000;
+      animation: dripSmoke 0.8s ease-out forwards;
+    }
+
+    @keyframes dripSmoke {
+      0% {
+        transform: translateY(0) scale(0.8);
+        opacity: 0.7;
+      }
+      100% {
+        transform: translateY(20px) scale(1.5);
+        opacity: 0;
+      }
+    }
+
+    .melt-pool {
+      position: fixed;
+      width: 120px;
+      height: 18px;
+      border-radius: 0;
+      background: #ff8f00;
+      border: 3px solid #000;
+      opacity: 0.85;
+      animation: meltPool 1.5s ease-out forwards;
+      z-index: 18;
+    }
+
+    @keyframes meltPool {
+      0% {
+        transform: scale(0.1);
+        opacity: 0;
+      }
+      30% {
+        transform: scale(0.9);
+        opacity: 0.7;
+      }
+      60% {
+        transform: scale(1.1);
+        opacity: 0.85;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 0.8;
+      }
+    }
+
+    .particle {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      border-radius: 0;
+      border: 2px solid #000;
+      pointer-events: none;
+      z-index: 20;
+      animation: fly 0.9s ease-out forwards;
+    }
+
+    @keyframes fly {
+      0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(var(--dx), var(--dy)) scale(0.2);
+        opacity: 0;
+      }
+    }
+
+    .boom {
+      position: absolute;
+      top: 40%;
+      left: 50%;
+      margin-left: -45px;
+      font-size: 90px;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 15;
+    }
+
+    #ufo {
+      position: fixed !important;
+      top: 20px !important;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 200px;
+      height: 70px;
+      z-index: 100;
+      visibility: hidden;
+      opacity: 0;
+    }
+
+    #ufo .ufo-body {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 200px;
+      height: 70px;
+      animation: bob 2.2s ease-in-out infinite alternate;
+    }
+
+    #ufo.enter {
+      visibility: visible;
+      animation: ufo-in 1.8s ease-out forwards;
+    }
+
+    #ufo.exit {
+      visibility: visible;
+      animation: ufo-out 1.2s ease-in forwards;
+    }
+
+    @keyframes ufo-in {
+      from {
+        transform: translateX(-50%) scale(0.15);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(-50%) scale(1);
+        opacity: 1;
+      }
+    }
+
+    @keyframes ufo-out {
+      from {
+        transform: translateX(-50%) scale(1);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(-50%) scale(0.1);
+        opacity: 0;
+      }
+    }
+
+    .ufo-antenna {
+      position: absolute;
+      top: -50px;
+      left: 50%;
+      margin-left: -2px;
+      width: 4px;
+      height: 20px;
+      background: #000;
+      z-index: 4;
+    }
+
+    .ufo-antenna::after {
+      content: '';
+      position: absolute;
+      top: -7px;
+      left: -3px;
+      width: 10px;
+      height: 10px;
+      background: #ff1744;
+      border: 2px solid #000;
+      animation: blink 0.4s step-end infinite alternate;
+    }
+
+    .ufo-dome {
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      margin-left: -48px;
+      width: 96px;
+      height: 46px;
+      background:
+        linear-gradient(
+          #e1f5fe 0 10px,
+          #4fc3f7 10px 26px,
+          #0288d1 26px 34px,
+          #01579b 34px
+        );
+      border: 4px solid #000;
+      border-radius: 0;
+      z-index: 3;
+    }
+
+    .ufo-alien {
+      position: absolute;
+      top: -24px;
+      left: 50%;
+      margin-left: -15px;
+      width: 30px;
+      height: 18px;
+      background: #7cb342;
+      border: 3px solid #000;
+      z-index: 4;
+    }
+
+    .ufo-alien::before {
+      content: '';
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      width: 8px;
+      height: 9px;
+      background: #000;
+      box-shadow: 11px 0 0 #000;
+    }
+
+    .ufo-alien::after {
+      content: '';
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      width: 3px;
+      height: 7px;
+      background: #fff;
+      box-shadow: 11px 0 0 #fff;
+    }
+
+    .ufo-saucer-top {
+      position: absolute;
+      top: 6px;
+      left: 50%;
+      margin-left: -80px;
+      width: 160px;
+      height: 18px;
+      background: #cfd8dc;
+      border: 4px solid #000;
+      border-radius: 0;
+      z-index: 2;
+    }
+
+    .ufo-saucer {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      margin-left: -95px;
+      width: 190px;
+      height: 30px;
+      background:
+        repeating-linear-gradient(
+          90deg,
+          #90a4ae 0 20px,
+          #78909c 20px 40px
+        );
+      border: 4px solid #000;
+      border-radius: 0;
+      box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.25), 6px 8px 0 rgba(0, 0, 0, 0.35);
+    }
+
+    .ufo-bell {
+      position: absolute;
+      top: 44px;
+      left: 50%;
+      margin-left: -55px;
+      width: 110px;
+      height: 20px;
+      background: #546e7a;
+      border: 4px solid #000;
+      border-radius: 0;
+    }
+
+    .ufo-bell::after {
+      content: '';
+      position: absolute;
+      top: 4px;
+      left: 50%;
+      margin-left: -18px;
+      width: 36px;
+      height: 8px;
+      background: #ffcc80;
+      border: 2px solid #000;
+      border-radius: 0;
+    }
+
+    .ufo-light {
+      position: absolute;
+      bottom: -6px;
+      width: 12px;
+      height: 12px;
+      border-radius: 0;
+      border: 2px solid #000;
+      animation: blink 0.5s step-end infinite alternate;
+      z-index: 1;
+    }
+
+    .ufo-light.l1 { left: 20px; background: #ff1744; }
+    .ufo-light.l2 { left: 55px; background: #00e676; animation-delay: 0.15s; }
+    .ufo-light.l3 { left: 95px; background: #2979ff; animation-delay: 0.3s; }
+    .ufo-light.l4 { left: 130px; background: #ffee58; animation-delay: 0.45s; }
+    .ufo-light.l5 { left: 165px; background: #ff9100; animation-delay: 0.6s; }
+
+    @keyframes blink {
+      from {
+        opacity: 0.15;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes bob {
+      from {
+        transform: translateY(0);
+      }
+      to {
+        transform: translateY(14px);
+      }
+    }
+
+    #beam {
+      position: fixed;
+      top: 92px;
+      left: calc(50% - 70px);
+      width: 140px;
+      height: 26vh;
+      clip-path: polygon(45% 0, 55% 0, 90% 100%, 10% 100%);
+      background:
+        repeating-linear-gradient(
+          180deg,
+          rgba(96, 200, 96, 0.95) 0 12px,
+          rgba(96, 200, 96, 0.35) 12px 20px
+        ),
+        linear-gradient(rgba(96, 200, 96, 0.85), rgba(96, 200, 96, 0));
+      z-index: 17;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    #beam.show {
+      visibility: visible;
+      animation: beam-glow 0.8s ease-in-out infinite alternate;
+    }
+
+    @keyframes beam-glow {
+      from {
+        opacity: 0.5;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    .house.abducted {
+      animation: abduct 1.5s ease-in forwards;
+    }
+
+    @keyframes abduct {
+      to {
+        transform: translateY(-10vh) scale(0.1);
+        opacity: 0;
+      }
+    }
+
+    .boom.show {
+      animation: boom 0.8s ease-out forwards;
+    }
+
+    @keyframes boom {
+      0% {
+        opacity: 1;
+        transform: scale(0.3);
+      }
+      100% {
+        opacity: 0;
+        transform: scale(2.5);
+      }
+    }
+
+    .message {
+      position: fixed;
+      top: auto;
+      bottom: 18px;
+      left: 16px;
+      transform: none;
+      background: #1a1a2e;
+      color: #ffe066;
+      padding: 12px 20px;
+      border: 3px solid #000;
+      border-radius: 0;
+      font-size: 11px;
+      letter-spacing: 1px;
+      box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.45);
+      z-index: 1001;
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.15s, visibility 0.15s;
+    }
+
+    .message.show {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    #start-menu {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 40px;
+      background:
+        repeating-linear-gradient(
+          0deg,
+          rgba(255, 255, 255, 0.06) 0 8px,
+          transparent 8px 16px
+        ),
+        #6db3f2;
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.6s ease, visibility 0.6s ease;
+    }
+
+    #start-menu.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    #start-menu::before {
+      content: '';
+      position: absolute;
+      top: 16%;
+      left: 12%;
+      width: 120px;
+      height: 24px;
+      background: #fff;
+      border: 4px solid #000;
+      box-shadow: 0 -16px 0 4px #fff;
+      animation: cloud-drift 14s steps(64) infinite;
+    }
+
+    #start-menu::after {
+      content: '';
+      position: absolute;
+      top: 30%;
+      right: 14%;
+      width: 88px;
+      height: 20px;
+      background: #fff;
+      border: 4px solid #000;
+      animation: cloud-drift 18s steps(80) infinite reverse;
+    }
+
+    @keyframes cloud-drift {
+      from {
+        transform: translateX(0);
+      }
+      to {
+        transform: translateX(-48px);
+      }
+    }
+
+    #start-menu h1 {
+      font-family: var(--pixel);
+      font-size: 34px;
+      line-height: 1.4;
+      color: #ffd42a;
+      text-align: center;
+      text-shadow: 3px 3px 0 #b8432f, 6px 6px 0 rgba(0, 0, 0, 0.5);
+      letter-spacing: 1px;
+      animation: title-bounce 2s steps(8) infinite;
+    }
+
+    #start-menu .subtitle {
+      font-size: 12px;
+      color: #fffde7;
+      text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.5);
+      margin-top: -18px;
+    }
+
+    @keyframes title-bounce {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    #btn-play {
+      font-family: var(--pixel);
+      font-size: 18px;
+      font-weight: bold;
+      color: #fff;
+      padding: 20px 48px;
+      border: 4px solid #000;
+      border-radius: 0;
+      cursor: pointer;
+      background: #ff5722;
+      box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.45);
+      transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.08s ease;
+      letter-spacing: 2px;
+    }
+
+    #btn-play:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.45);
+      filter: brightness(1.1);
+    }
+
+    #btn-play:active {
+      transform: translate(4px, 4px);
+      box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45);
+    }
+
+    #btn-mute-music,
+    #btn-mute-sfx {
+      position: fixed;
+      right: 16px;
+      z-index: 1200;
+      width: 56px;
+      height: 56px;
+      padding: 0;
+      font-size: 22px;
+      line-height: 1;
+      border: 4px solid #000;
+      border-radius: 0;
+      box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.4);
+    }
+
+    #btn-mute-music {
+      top: 16px;
+      background: #455a64;
+    }
+
+    #btn-mute-sfx {
+      top: 84px;
+      background: #5d4037;
+    }
+
+    #btn-mute-music:hover,
+    #btn-mute-sfx:hover {
+      filter: brightness(1.2);
+    }
+
+    #score-display {
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 1200;
+      padding: 12px 16px;
+      font-size: 12px;
+      letter-spacing: 1px;
+      text-align: center;
+      color: #ffe066;
+      background: #1a1a2e;
+      border: 3px solid #000;
+      box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.4);
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      pointer-events: none;
+      transform: none;
+    }
+
+    button:disabled:hover {
+      transform: none;
+      filter: none;
+      box-shadow: var(--shadow);
+    }
+  </style>
+</head>
+<body>
+  <div id="score-display">Pontos: 0</div>
+  <button id="btn-mute-music" type="button" title="Desativar música">🎵</button>
+  <button id="btn-mute-sfx" type="button" title="Desativar efeitos sonoros">🔊</button>
+
+  <audio id="menu-bgm" loop preload="auto">
+    <source src="https://upload.wikimedia.org/wikipedia/commons/transcoded/e/e2/8-bit_Music_for_GameDev_-_04._Mechanical_Complex.opus/8-bit_Music_for_GameDev_-_04._Mechanical_Complex.opus.mp3" type="audio/mpeg">
+    <source src="https://upload.wikimedia.org/wikipedia/commons/transcoded/e/e2/8-bit_Music_for_GameDev_-_04._Mechanical_Complex.opus/8-bit_Music_for_GameDev_-_04._Mechanical_Complex.opus.ogg" type="audio/ogg">
+  </audio>
+
+  <audio id="game-bgm" loop preload="auto">
+    <source src="https://upload.wikimedia.org/wikipedia/commons/transcoded/c/c2/8-bit_Music_for_GameDev_-_03._Boss_Battle.opus/8-bit_Music_for_GameDev_-_03._Boss_Battle.opus.mp3" type="audio/mpeg">
+    <source src="https://upload.wikimedia.org/wikipedia/commons/transcoded/c/c2/8-bit_Music_for_GameDev_-_03._Boss_Battle.opus/8-bit_Music_for_GameDev_-_03._Boss_Battle.opus.ogg" type="audio/ogg">
+  </audio>
+
+  <div id="start-menu">
+    <h1>Destruidor de Casas</h1>
+    <div class="subtitle">Construa... ou destrua tudo!</div>
+    <button id="btn-play" type="button">JOGAR</button>
+  </div>
+
+  <div class="ground"></div>
+
+  <div class="action-panel">
+    <div class="ac-group">
+      <span class="ac-group__titulo">Construir</span>
+      <button id="btn-build" type="button" onclick="buildHouse()">Construir casa</button>
+    </div>
+    <button id="btn-explode" type="button" onclick="explodeHouse()">Explodir casa</button>
+    <button id="btn-melt" type="button" onclick="meltHouse()">Derreter casa</button>
+    <div class="ac-group">
+      <span class="ac-group__titulo">Ovni</span>
+      <button id="btn-abduct" type="button" onclick="abductHouse()">Abduzir casa</button>
+      <button id="btn-return" type="button" onclick="returnHouse()">Devolver casa</button>
+    </div>
+  </div>
+
+  <div id="ufo">
+    <div class="ufo-body">
+      <div class="ufo-antenna"></div>
+      <div class="ufo-alien"></div>
+      <div class="ufo-dome"></div>
+      <div class="ufo-saucer-top"></div>
+      <div class="ufo-saucer"></div>
+      <div class="ufo-bell"></div>
+      <div class="ufo-light l1"></div>
+      <div class="ufo-light l2"></div>
+      <div class="ufo-light l3"></div>
+      <div class="ufo-light l4"></div>
+      <div class="ufo-light l5"></div>
+    </div>
+  </div>
+  <div id="beam"></div>
+
+  <div class="scene">
+    <div id="boom" class="boom">💥</div>
+    <div id="house" class="house">
+      <div class="roof"></div>
+      <div class="door"></div>
+      <div class="window left"></div>
+      <div class="window right"></div>
+    </div>
+  </div>
+
+  <div id="message" class="message"></div>
+
+  <script>
+    var house = document.getElementById('house');
+    var boom = document.getElementById('boom');
+    var message = document.getElementById('message');
+    var ufo = document.getElementById('ufo');
+    var beam = document.getElementById('beam');
+    var startMenu = document.getElementById('start-menu');
+    var btnPlay = document.getElementById('btn-play');
+    var menuBgm = document.getElementById('menu-bgm');
+    var gameBgm = document.getElementById('game-bgm');
+    var btnMuteMusic = document.getElementById('btn-mute-music');
+    var btnMuteSfx = document.getElementById('btn-mute-sfx');
+    var btnExplode = document.getElementById('btn-explode');
+    var btnMelt = document.getElementById('btn-melt');
+    var btnAbduct = document.getElementById('btn-abduct');
+    var scoreDisplay = document.getElementById('score-display');
+    var audioCtx = null;
+    var score = 0;
+    var musicMuted = false;
+    var sfxMuted = false;
+    var menuBgmStarted = false;
+    var gameBgmStarted = false;
+    var gameStarted = false;
+    var houseBuilt = false;
+    var houseDestroyed = true;
+    var houseAbducted = false;
+    var msgTimer = null;
+    var ufoBusy = false;
+
+    function ensureAudioCtx() {
+      if (!audioCtx) {
+        var Ctx = window.AudioContext || window.webkitAudioContext;
+        if (Ctx) audioCtx = new Ctx();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function playClickSfx() {
+      if (sfxMuted) return;
+      var ctx = ensureAudioCtx();
+      if (!ctx) return;
+      var t = ctx.currentTime;
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(900, t);
+      osc.frequency.exponentialRampToValueAtTime(160, t + 0.18);
+      gain.gain.setValueAtTime(0.18, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.22);
+    }
+
+    function noiseBuffer(ctx, seconds) {
+      var len = Math.floor(ctx.sampleRate * seconds);
+      var buf = ctx.createBuffer(1, len, ctx.sampleRate);
+      var data = buf.getChannelData(0);
+      for (var i = 0; i < len; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      return buf;
+    }
+
+    function sfxBuild() {
+      if (sfxMuted) return;
+      var ctx = ensureAudioCtx();
+      if (!ctx) return;
+      var t = ctx.currentTime;
+      [0, 0.14].forEach(function (off, idx) {
+        var start = t + off;
+        var osc = ctx.createOscillator();
+        var og = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(190 + idx * 80, start);
+        og.gain.setValueAtTime(0.28, start);
+        og.gain.exponentialRampToValueAtTime(0.001, start + 0.12);
+        osc.connect(og);
+        og.connect(ctx.destination);
+        osc.start(start);
+        osc.stop(start + 0.13);
+
+        var src = ctx.createBufferSource();
+        src.buffer = noiseBuffer(ctx, 0.08);
+        var hp = ctx.createBiquadFilter();
+        hp.type = 'highpass';
+        hp.frequency.value = 1600;
+        var ng = ctx.createGain();
+        ng.gain.setValueAtTime(0.22, start);
+        ng.gain.exponentialRampToValueAtTime(0.001, start + 0.08);
+        src.connect(hp);
+        hp.connect(ng);
+        ng.connect(ctx.destination);
+        src.start(start);
+        src.stop(start + 0.1);
+      });
+    }
+
+    function sfxExplode() {
+      if (sfxMuted) return;
+      var ctx = ensureAudioCtx();
+      if (!ctx) return;
+      var t = ctx.currentTime;
+
+      var src = ctx.createBufferSource();
+      src.buffer = noiseBuffer(ctx, 0.55);
+      var lp = ctx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.setValueAtTime(1400, t);
+      lp.frequency.exponentialRampToValueAtTime(120, t + 0.45);
+      var ng = ctx.createGain();
+      ng.gain.setValueAtTime(0.001, t);
+      ng.gain.exponentialRampToValueAtTime(0.5, t + 0.01);
+      ng.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+      src.connect(lp);
+      lp.connect(ng);
+      ng.connect(ctx.destination);
+      src.start(t);
+      src.stop(t + 0.55);
+
+      var osc = ctx.createOscillator();
+      var og = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(320, t);
+      osc.frequency.exponentialRampToValueAtTime(40, t + 0.4);
+      og.gain.setValueAtTime(0.35, t);
+      og.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
+      osc.connect(og);
+      og.connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.46);
+    }
+
+    function sfxBubble(ctx, start, freq) {
+      var osc = ctx.createOscillator();
+      var g = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, start);
+      osc.frequency.exponentialRampToValueAtTime(freq * 2.2, start + 0.09);
+      g.gain.setValueAtTime(0.0001, start);
+      g.gain.exponentialRampToValueAtTime(0.22, start + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.001, start + 0.1);
+      osc.connect(g);
+      g.connect(ctx.destination);
+      osc.start(start);
+      osc.stop(start + 0.11);
+    }
+
+    function sfxMelt() {
+      if (sfxMuted) return;
+      var ctx = ensureAudioCtx();
+      if (!ctx) return;
+      var t = ctx.currentTime;
+
+      var src = ctx.createBufferSource();
+      src.buffer = noiseBuffer(ctx, 1.3);
+      var bp = ctx.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.frequency.setValueAtTime(3200, t);
+      bp.frequency.linearRampToValueAtTime(1400, t + 1.15);
+      bp.Q.value = 0.7;
+      var ng = ctx.createGain();
+      ng.gain.setValueAtTime(0.14, t);
+      ng.gain.linearRampToValueAtTime(0.06, t + 1.15);
+      ng.gain.exponentialRampToValueAtTime(0.001, t + 1.3);
+      src.connect(bp);
+      bp.connect(ng);
+      ng.connect(ctx.destination);
+      src.start(t);
+      src.stop(t + 1.3);
+
+      for (var i = 0; i < 7; i++) {
+        sfxBubble(ctx, t + 0.05 + i * 0.14 + Math.random() * 0.05, 180 + Math.random() * 260);
+      }
+    }
+
+    function sfxAbduct() {
+      if (sfxMuted) return;
+      var ctx = ensureAudioCtx();
+      if (!ctx) return;
+      var t = ctx.currentTime;
+
+      var osc = ctx.createOscillator();
+      var g = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(180, t);
+      osc.frequency.exponentialRampToValueAtTime(1200, t + 0.9);
+
+      var lfo = ctx.createOscillator();
+      var lfoGain = ctx.createGain();
+      lfo.frequency.value = 7;
+      lfoGain.gain.value = 45;
+      lfo.connect(lfoGain);
+      lfoGain.connect(osc.frequency);
+
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.25, t + 0.05);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.95);
+      osc.connect(g);
+      g.connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + 1);
+      lfo.start(t);
+      lfo.stop(t + 1);
+    }
+
+    function sfxReturn() {
+      if (sfxMuted) return;
+      var ctx = ensureAudioCtx();
+      if (!ctx) return;
+      var t = ctx.currentTime;
+
+      var osc = ctx.createOscillator();
+      var g = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(220, t);
+      osc.frequency.exponentialRampToValueAtTime(70, t + 0.25);
+      g.gain.setValueAtTime(0.3, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+      osc.connect(g);
+      g.connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.32);
+
+      [660, 880, 1174].forEach(function (f, i) {
+        var o = ctx.createOscillator();
+        var og = ctx.createGain();
+        o.type = 'triangle';
+        o.frequency.value = f;
+        var st = t + i * 0.07;
+        og.gain.setValueAtTime(0.0001, st);
+        og.gain.exponentialRampToValueAtTime(0.18, st + 0.01);
+        og.gain.exponentialRampToValueAtTime(0.001, st + 0.18);
+        o.connect(og);
+        og.connect(ctx.destination);
+        o.start(st);
+        o.stop(st + 0.2);
+      });
+    }
+
+    function startMenuBgm() {
+      if (gameStarted || menuBgmStarted || musicMuted) return;
+      menuBgm.volume = 0.45;
+      var p = menuBgm.play();
+      if (p && p.catch) {
+        p.catch(function () {});
+      }
+      menuBgmStarted = true;
+    }
+
+    function startGameBgm() {
+      if (gameBgmStarted || musicMuted) return;
+      gameBgm.volume = 0.5;
+      var p = gameBgm.play();
+      if (p && p.catch) {
+        p.catch(function () {});
+      }
+      gameBgmStarted = true;
+    }
+
+    function toggleMusicMute() {
+      musicMuted = !musicMuted;
+      if (musicMuted) {
+        menuBgm.pause();
+        gameBgm.pause();
+      } else {
+        if (gameStarted) {
+          startGameBgm();
+        } else {
+          startMenuBgm();
+        }
+      }
+      btnMuteMusic.textContent = musicMuted ? '🔇' : '🎵';
+      btnMuteMusic.title = musicMuted ? 'Ativar música' : 'Desativar música';
+    }
+
+    function toggleSfxMute() {
+      sfxMuted = !sfxMuted;
+      btnMuteSfx.textContent = sfxMuted ? '🔇' : '🔊';
+      btnMuteSfx.title = sfxMuted ? 'Ativar efeitos sonoros' : 'Desativar efeitos sonoros';
+      if (!sfxMuted) {
+        playClickSfx();
+      }
+    }
+
+    btnMuteMusic.addEventListener('click', function (e) {
+      e.stopPropagation();
+      toggleMusicMute();
+    });
+
+    btnMuteSfx.addEventListener('click', function (e) {
+      e.stopPropagation();
+      toggleSfxMute();
+    });
+
+    document.addEventListener('click', function () {
+      if (!gameStarted) startMenuBgm();
+    });
+
+    btnPlay.addEventListener('click', function () {
+      playClickSfx();
+      menuBgm.pause();
+      menuBgm.currentTime = 0;
+      startGameBgm();
+      startMenu.classList.add('hidden');
+      gameStarted = true;
+    });
+
+    function showMessage(text) {
+      message.textContent = text;
+      message.classList.add('show');
+      if (msgTimer) clearTimeout(msgTimer);
+      msgTimer = setTimeout(function () {
+        message.classList.remove('show');
+      }, 1500);
+    }
+
+    function addScore(pontos) {
+      score += pontos;
+      scoreDisplay.textContent = 'Pontos: ' + score;
+    }
+
+    function startCooldown(btn, segundos, textoOriginal) {
+      btn.disabled = true;
+      var restante = segundos;
+      btn.textContent = 'Aguarde (' + restante + 's)...';
+      var timer = setInterval(function () {
+        restante -= 1;
+        if (restante <= 0) {
+          clearInterval(timer);
+          btn.disabled = false;
+          btn.textContent = textoOriginal;
+        } else {
+          btn.textContent = 'Aguarde (' + restante + 's)...';
+        }
+      }, 1000);
+    }
+
+    function spawnParticles() {
+      var colors = ['#f44336', '#ff9800', '#ffeb3b', '#8d6e63', '#ffffff'];
+      var rect = house.getBoundingClientRect();
+      var hw = rect.left + rect.width / 2;
+      var hy = rect.top + rect.height / 2;
+      for (var i = 0; i < 30; i++) {
+        var p = document.createElement('div');
+        p.className = 'particle';
+        p.style.background = colors[i % colors.length];
+        p.style.left = hw + 'px';
+        p.style.top = hy + 'px';
+        p.style.setProperty('--dx', (Math.random() - 0.5) * 500 + 'px');
+        p.style.setProperty('--dy', (-Math.random() * 500 + 100) + 'px');
+        document.body.appendChild(p);
+        (function (el) {
+          setTimeout(function () { el.remove(); }, 900);
+        })(p);
+      }
+    }
+
+    function buildHouse() {
+      if (!gameStarted) return;
+      if (houseAbducted) {
+        showMessage('A casa está abduzida! Use o botão "Devolver casa" primeiro.');
+        return;
+      }
+      if (!houseDestroyed) {
+        showMessage('Primeiro a casa precisa ser destruida!');
+        return;
+      }
+      if (houseBuilt) {
+        showMessage('A casa já está construída!');
+        return;
+      }
+      sfxBuild();
+      houseBuilt = true;
+      houseDestroyed = false;
+      houseAbducted = false;
+      house.style.visibility = '';
+      boom.classList.remove('show');
+      house.classList.remove('built');
+      void house.offsetWidth;
+      house.classList.add('built');
+      house.classList.add('popping');
+      setTimeout(function () {
+        house.classList.remove('popping');
+      }, 500);
+      showMessage('🏠 Casa construída');
+    }
+
+    function explodeHouse() {
+      if (!gameStarted) return;
+      if (!houseBuilt) {
+        showMessage('Não há casa para explodir!');
+        return;
+      }
+      sfxExplode();
+      spawnParticles();
+      boom.classList.remove('show');
+      void boom.offsetWidth;
+      boom.classList.add('show');
+      house.classList.remove('built');
+      houseBuilt = false;
+      houseDestroyed = true;
+      addScore(100);
+      startCooldown(btnExplode, 4, 'Explodir casa');
+      showMessage('💥 BUM!');
+    }
+
+    function spawnDrips() {
+      var rect = house.getBoundingClientRect();
+      var hw = rect.left + rect.width / 2;
+      var hy = rect.top + rect.height / 2;
+      var colors = ['#ff7043', '#ff3e00', '#e53935', '#ff8a65'];
+      for (var i = 0; i < 10; i++) {
+        var d = document.createElement('div');
+        d.className = 'drip';
+        var fromRoof = i < 3;
+        var fromLeft = i % 4 === 0;
+        var fromRight = i % 4 === 2;
+        var startX = fromRoof ? hw + (i - 1.5) * 30 : fromLeft ? rect.left + 20 : rect.right - 20;
+        d.style.left = startX + 'px';
+        d.style.top = fromRoof ? rect.top + 5 : rect.top + 40 + (i % 5) * 25 + 'px';
+        d.style.background = colors[i % colors.length];
+        d.style.animationDelay = i * 0.12 + 's';
+        document.body.appendChild(d);
+        (function (el) {
+          setTimeout(function () { el.remove(); }, 2800);
+        })(d);
+        var smoke = document.createElement('div');
+        smoke.className = 'drip-smoke';
+        smoke.style.left = (startX + 2) + 'px';
+        smoke.style.top = (rect.top + 140 + (i % 3) * 10) + 'px';
+        smoke.style.animationDelay = (i * 0.12 + 0.5) + 's';
+        document.body.appendChild(smoke);
+        (function (el) {
+          setTimeout(function () { el.remove(); }, 1400);
+        })(smoke);
+      }
+      var pool = document.createElement('div');
+      pool.className = 'melt-pool';
+      pool.style.left = (hw - 60) + 'px';
+      pool.style.top = (rect.bottom - 8) + 'px';
+      document.body.appendChild(pool);
+      (function (el) {
+        setTimeout(function () { el.remove(); }, 3000);
+      })(pool);
+    }
+
+    function meltHouse() {
+      if (!gameStarted) return;
+      if (!houseBuilt) {
+        showMessage('Não há casa para derreter!');
+        return;
+      }
+      sfxMelt();
+      spawnDrips();
+      house.classList.remove('built');
+      house.classList.add('melting');
+      houseBuilt = false;
+      houseDestroyed = true;
+      addScore(100);
+      startCooldown(btnMelt, 4, 'Derreter casa');
+      showMessage('🥵 A casa derreteu');
+      setTimeout(function () {
+        house.classList.remove('melting');
+      }, 1700);
+    }
+
+    function flyEnter(cb) {
+      if (ufoBusy) return;
+      ufoBusy = true;
+      ufo.classList.remove('exit');
+      ufo.style.left = '';
+      ufo.style.top = '';
+      ufo.style.visibility = '';
+      ufo.classList.add('enter');
+      setTimeout(function () {
+        if (cb) cb();
+      }, 1600);
+    }
+
+    function flyExit(cb) {
+      ufo.classList.remove('enter');
+      void ufo.offsetWidth;
+      ufo.classList.add('exit');
+      setTimeout(function () {
+        ufo.classList.remove('exit');
+        ufo.style.left = '';
+        ufo.style.top = '';
+        ufo.style.visibility = 'hidden';
+        ufoBusy = false;
+        if (cb) cb();
+      }, 1200);
+    }
+
+    function abductHouse() {
+      if (!gameStarted) return;
+      if (!houseBuilt) {
+        showMessage('Não há casa para abduzir!');
+        return;
+      }
+      if (ufoBusy) {
+        showMessage('O OVNI está ocupado!');
+        return;
+      }
+      sfxAbduct();
+      houseBuilt = false;
+      houseAbducted = true;
+      addScore(100);
+      startCooldown(btnAbduct, 5, 'Abduzir casa');
+
+      flyEnter(function () {
+        beam.classList.add('show');
+        house.classList.remove('built');
+        house.classList.add('abducted');
+      });
+
+      setTimeout(function () {
+        house.classList.remove('abducted');
+        house.style.visibility = 'hidden';
+        beam.classList.remove('show');
+        flyExit(function () {
+          house.style.visibility = '';
+        });
+      }, 3400);
+
+      showMessage('🛸 Casa abduzida!');
+    }
+
+    function returnHouse() {
+      if (!gameStarted) return;
+      if (!houseAbducted) {
+        showMessage('A casa não está abduzida!');
+        return;
+      }
+      if (ufoBusy) {
+        showMessage('O OVNI está ocupado!');
+        return;
+      }
+      sfxReturn();
+      houseAbducted = false;
+
+      flyEnter(function () {
+        beam.classList.add('show');
+        house.classList.remove('built');
+        house.style.visibility = '';
+        void house.offsetWidth;
+        house.classList.add('built');
+        house.classList.add('returning');
+      });
+
+      setTimeout(function () {
+        house.classList.remove('returning');
+        houseBuilt = true;
+        houseDestroyed = false;
+        beam.classList.remove('show');
+        showMessage('🏠 Casa devolvida!');
+        flyExit();
+      }, 3400);
+    }
+  </script>
+</body>
+</html>
